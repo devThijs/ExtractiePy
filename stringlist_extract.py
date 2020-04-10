@@ -52,10 +52,10 @@ def extract(txtfilename, element_termination, row_termination, elementStorageMat
             stringterms = search_string(row_string , element_termination, len(row_string))#inventarise all string terminations in row
         elif row == totallines-1:
             row_string = raw[( row_terminations[row-1]+len(row_termination) ) : len(raw)]
-            stringterms = search_string( row_string, element_termination)#inventarise all string terminations in row
+            stringterms = search_string(row_string, element_termination)#inventarise all string terminations in row
         else:
             row_string = raw[( row_terminations[row-1]+len(row_termination) ): row_terminations[row]]
-            stringterms = search_string( row_string, element_termination, len(row_string))#inventarise all string terminations in row
+            stringterms = search_string(row_string, element_termination, len(row_string))#inventarise all string terminations in row
 
         #extract strings from row
         totalstrings = len(stringterms)+1
@@ -95,6 +95,29 @@ def extract(txtfilename, element_termination, row_termination, elementStorageMat
 
         appendNewRowMatrix(elementStorageMatrix, stringlist)    
         stringlist.clear()
+
+#further processing
+#exclude any rows not specified. 
+def derive_rows(data = [], include_rows = []): #pass data to process a list of which row id's you want to include in final matrix
+    list = []
+    matrix = []
+    n=0
+    include_rows.sort()
+
+    for row in data:
+        print(row)
+        for i, element in enumerate(row):
+            print(element)
+            if i== include_rows[n]:
+                print('appendlist')
+                list.append(element)
+                print('list is:', list)
+                n += 1
+        n=0
+        
+        appendNewRowMatrix(matrix, list)
+        print('matrix:', matrix)
+        list.clear()
 
 
 def checknextarg(first_arg):
