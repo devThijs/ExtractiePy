@@ -1,27 +1,34 @@
 #This is a tool for extracting specific columns in an arbitrarily terminated string list.
-#Specify the termination characters, input and output files, and output filetype
+#I needed a list of hexadecimal values for ASCII characters. Searching for a few minutes(yeah i could have just looked harder lol) 
+#I could only find full tables for ASCII, not the specific values i needed; prompting me to write this script
+#so as to not have to type the entire table rows myself.
 
+#how to use:
+#Specify the termination characters, input and output filename. Currently only supports csv output
 #return all indices of searched string, with the last element being the row termination location
 
 
 import sys
-import file_operations as IO
+import fileIO as iop
 from enum import Enum
 from dataclasses import dataclass
+from settings import *
+
 
 
 
 #searches for a specified substring in a provided string
 #returns substring start ID
 #does not check '-' terminations
-def search_string(input_str, search_str, length=0):
+def search_string(input_str, search_str = '\n', length=0):#string to search within, phrase to search
     l1 = []
     index = 0
     if length == 0:
         length = len(input_str)
     while index <= length:
-        i = input_str.find(search_str, index)
+        i = input_str.find(search_str, index)#return -1 if not found
         if i == -1:
+            if verbose==2: print("  Row search exit index:", index)
             return l1
         l1.append(i)
         # print(l1)
@@ -35,18 +42,26 @@ def appendNewRowMatrix(matrixname, data = []):
         
 
 #returns all strings/elements in a filename as matrix [rows][columns]
-def extract(txtfilename, element_termination, row_termination, elementStorageMatrix = []):        
+def extract(txtfilename, element_termination, row_termination = '\n'):
+    elementStorageMatrix = []
     n=0
     raw = ''
     rawIO = open(txtfilename, 'rt')
     raw = rawIO.read()
+    if verbose==2: print(raw)
     rawIO.close()
     stringlist = []
     row_terminations = search_string(raw, row_termination)  #inventarise all row terminations
+    if verbose==2: print('  row termination ids:', row_terminations)
     totallines = len(row_terminations) +1
+    if verbose==2: print('  totallines:', totallines)
 
+    if raw == '':
+        print("  Yo this file is empty")
+        exit()
+    stringterms = []
     for row in range(totallines):
-
+        
         if row==0:
             row_string = raw[0 : row_terminations[row]]
             stringterms = search_string(row_string , element_termination, len(row_string))#inventarise all string terminations in row
@@ -59,9 +74,9 @@ def extract(txtfilename, element_termination, row_termination, elementStorageMat
 
         #extract strings from row
         totalstrings = len(stringterms)+1
-
+        if verbose==2: print("  Elements in", str(row) + "nth", "row:", totalstrings, end='')
+        if totalstrings<=1: print(  "Oop somthing went wrong. \n--Please check if your arguments are correct--")
         for n in range(totalstrings):
-
             if n==0:    #if first string
                 if row==0:#iof first row
                         string = raw[0 : stringterms[n]]
@@ -95,29 +110,38 @@ def extract(txtfilename, element_termination, row_termination, elementStorageMat
 
         appendNewRowMatrix(elementStorageMatrix, stringlist)    
         stringlist.clear()
+    if verbose: print("  Extraction complete.\n  Total rows:", totallines, "\n  Total elements:", totallines*len(elementStorageMatrix[1]))
+    return elementStorageMatrix
+
 
 #further processing
-#exclude any rows not specified. 
-def derive_rows(data = [], include_rows = []): #pass data to process a list of which row id's you want to include in final matrix
+#exclude any columns not specified. Pass data to process column id's you want to include in final matrix
+#processes matrix row by row
+def derive_columns(data = [], include_columns = []):
     list = []
     matrix = []
     n=0
-    include_rows.sort()
-
+    include_columns.sort()
+    if include_columns==0:
+        print("  No columns defined, skipping column derivation.")
+    return data
     for row in data:
-        print(row)
+        # print(row)
         for i, element in enumerate(row):
-            print(element)
-            if i== include_rows[n]:
-                print('appendlist')
+            # print(element) if verbose==True
+            if i== include_columns[n]:
                 list.append(element)
-                print('list is:', list)
                 n += 1
+            if n == len(include_columns) -1:
+                if verbose==2: print('extracted column vals:', list)
+                break
         n=0
         
         appendNewRowMatrix(matrix, list)
-        print('matrix:', matrix)
+        if verbose: print('appending to matrix..')
         list.clear()
+    if verbose: print(' deriving select columns completed..')
+    return matrix
 
 
 def checknextarg(first_arg):
@@ -132,60 +156,3 @@ def checknextarg(first_arg):
         print('No parameter after' + first_arg)
         print(terminal_instructions)
         return 1
-
-elementStorageMatrixxxx = []
-extract('filename.txt', '_', '\n', elementStorageMatrixxxx)
-print(elementStorageMatrixxxx[0][0])
-print(elementStorageMatrixxxx[1][1])
-IO.outputMatrixCSV(elementStorageMatrixxxx)
-
-scriptname = 'stringfind.py' 
-terminal_instructions = 'usage: python ' + scriptname + ' -i <inputFilename> -t <element termination> <row termination> (optional: -o <outputFilename>)'
-
-
-# #when parameter tags are passed in terminal, raise appropriate flag in usrparameters
-# #/////////////////////////////////////
-# #-------------------------------------
-# @dataclass
-# class Usrprm:
-#     inputP: bool = False
-#     terminationP: bool = False
-#     extractP: bool = False
-#     outputP: bool = False
-# #-------------------------------------
-# pIndex=0
-# if '-i' or '--input' not in sys.argv:
-#     print("file input is mandatory")
-#     print(terminal_instructions)
-#     exit()
-# if '-' in (sys.argv.index('-i')+1):
-#     if checknextarg('--termination')==1:
-
-#         exit()
-# #-------------------------------------
-# if '-t'  in sys.argv:
-#     if checknextarg('-t')==1:
-#         exit()
-#     Usrprm.terminationP=True
-# elif '--termination' in sys.argv:
-#     if checknextarg('--termination')==1:
-#         exit()
-#     Usrprm.terminationP=True
-# if '-e' in sys.argv:
-#     if checknextarg('-e')==1:
-#         exit()
-#     Usrprm.extractP=True
-# elif '--extract' in sys.argv:
-#     if checknextarg('--extract')==1:
-#         exit()
-#     Usrprm.extractP=True
-# if '-o' in sys.argv:
-#     if checknextarg('-o')==1:
-#         exit()
-#     Usrprm.outputP=True
-# elif '--output' in sys.argv:
-#     if checknextarg('--output')==1:
-#         exit()
-#     Usrprm.outputP=True
-# #-------------------------------------
-# #/////////////////////////////////////

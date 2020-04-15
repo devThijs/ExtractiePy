@@ -1,6 +1,6 @@
 import os.path
-
-default_outputname = 'extracted_defn'
+from settings import *
+default_outputname = 'extracted_def'
 #corrects small user mistakes and combines name and extension as output filename
 #returns file name and extension
 def user_input_preproc(usr_inputname = default_outputname, outputtype_user = '.csv'):
@@ -34,11 +34,12 @@ def checkDuplicateFilename(outputname = default_outputname, outputtype_processed
     return filename
 
 #open and or create file, write matrix data
-def outputMatrixCSV(dataMatrix = [], filepath = (default_outputname + '.csv')):
+def outputMatrixCSV(dataMatrix = [], filepath = './data/' + (default_outputname + '.csv')):
+    if verbose: print("  Writing output to", filepath, "..")
     if len(dataMatrix) == 0:
         print('Please provide a data matrix to output.')
         return 1
-    try:    
+    try:
         file = open(filepath, 'wt')
         rowsinmatrix = len(dataMatrix)
         for irow, row in enumerate(dataMatrix):
